@@ -109,10 +109,10 @@ Resources:
               <html lang="ja">
               <head>
               <meta charset="UTF-8">
-              <title>メンテナンスのお知らせ</title>
+              <title>【ERROR】</title>
               </head>
               <body>
-                <h1>ただいまメンテナンス中です</h1>
+                <h1>CloudFrontのDNSよりアクセスください</h1>
               </body>
               </html>
             StatusCode: 503
