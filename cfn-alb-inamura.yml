@@ -89,6 +89,11 @@ Resources:
         - Field: path-pattern
           Values: 
             - '*'
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: Custom-Header
+            Values: 
+              - inamura
       ListenerArn: !Ref ListenerHTTP
       Priority: 1
 
@@ -165,5 +170,5 @@ Outputs:
   ALBDomain:
     Description: ALB Domain
     Value:  !GetAtt ALB.DNSName
-      Export:
-        Name: cln-albdomain-inamura
+    Export:
+      Name: cln-albdomain-inamura
