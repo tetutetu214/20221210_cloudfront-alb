@@ -1,0 +1,46 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  CloudFront Create
+# ------------------------------------------------------------#
+#  Resources
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  CloudFront
+# ------------------------------------------------------------#
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: "Create CloudFront with CloudFormation"
+        PriceClass: PrinceClass_All
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+          TargetOriginId: !ImportValue cfn-lmd-inamura-name
+          ViewerProtocolPolicy: https-only
+        Enabled: true
+        HttpVersion: http2and3
+        Origins:
+          - Id: !ImportValue cfn-lmd-inamura-name
+            DomainName: !ImportValue OriginDomain
+            CustomOriginConfig:
+              HTTPSPort: '443'
+              OriginProtocolPolicy: https-only
+            OriginPath: !Sub
+              - /${StageName}/${FunctionName}
+              - StageName: {'Fn::ImportValue': StageName}
+                FunctionName: {'Fn::ImportValue': cfn-lmd-inamura-name}
+        PriceClass: PriceClass_All
+# ------------------------------------------------------------#
+# Output Parameters
+#------------------------------------------------------------#          
+Outputs:
+  DomainName:
+    Value: !GetAtt Distribution.DomainName
+    Export:
+      Name: cln-domainname-inamura
