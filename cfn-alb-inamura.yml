@@ -112,7 +112,7 @@ Resources:
               <title>【ERROR】</title>
               </head>
               <body>
-                <h1>CloudFrontのDNSよりアクセスください</h1>
+                <h1>CloudFront経由でアクセスください</h1>
               </body>
               </html>
             StatusCode: 503
