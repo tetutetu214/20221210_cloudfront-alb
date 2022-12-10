@@ -21,20 +21,19 @@ Resources:
             - HEAD
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
           Compress: true
-          TargetOriginId: !ImportValue cfn-lmd-inamura-name
-          ViewerProtocolPolicy: https-only
+          TargetOriginId: !ImportValue cfn-alb-id
+          ViewerProtocolPolicy: allow-all
         Enabled: true
         HttpVersion: http2and3
         Origins:
-          - Id: !ImportValue cfn-lmd-inamura-name
-            DomainName: !ImportValue OriginDomain
-            CustomOriginConfig:
-              HTTPSPort: '443'
-              OriginProtocolPolicy: https-only
-            OriginPath: !Sub
-              - /${StageName}/${FunctionName}
-              - StageName: {'Fn::ImportValue': StageName}
-                FunctionName: {'Fn::ImportValue': cfn-lmd-inamura-name}
+          - CustomOriginConfig:
+              HTTPSPort: '80'
+              OriginProtocolPolicy: http-only
+            DomainName: !ImportValue cfn-alb-dns
+            Id: !ImportValue cfn-alb-id
+            OriginCustomHeaders: 
+            - HeaderName: Custom-Header
+              HeaderValue: inamura
         PriceClass: PriceClass_All
 # ------------------------------------------------------------#
 # Output Parameters
@@ -43,4 +42,4 @@ Outputs:
   DomainName:
     Value: !GetAtt Distribution.DomainName
     Export:
-      Name: cln-domainname-inamura
+      Name: cfn-clf-dns

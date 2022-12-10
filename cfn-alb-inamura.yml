@@ -171,4 +171,9 @@ Outputs:
     Description: ALB Domain
     Value:  !GetAtt ALB.DNSName
     Export:
-      Name: cln-albdomain-inamura
+      Name: cfn-alb-dns
+  HostedZoneID:
+    Description: The ID of the Amazon Route 53 hosted zone associated with the load balancer.
+    Value:  !GetAtt ALB.CanonicalHostedZoneID
+    Export:
+      Name: cfn-alb-id
