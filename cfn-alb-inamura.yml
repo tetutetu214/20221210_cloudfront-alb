@@ -162,3 +162,8 @@ Outputs:
         - ""
         - - http://
           - !GetAtt ALB.DNSName
+  ALBDomain:
+    Description: ALB Domain
+    Value:  !GetAtt ALB.DNSName
+      Export:
+        Name: cln-albdomain-inamura
