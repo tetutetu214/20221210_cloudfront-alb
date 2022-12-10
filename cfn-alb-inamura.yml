@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 
+  ALB Create
+# ------------------------------------------------------------#
+#  Metadata
+# ------------------------------------------------------------#
+Metadata:
+  "AWS::CloudFormation::Interface":
+    ParameterGroups:
+      - Label:
+          default: "ALB Configuration"
+        Parameters:
+        - ALBName
+        - Type
+        - Scheme
+        - IpAddressType
+      - label:
+          default: "ALB TargetGroup"
+        Parameters:
+        - TGName1
+        - TargetType
+      - label:
+          default: "ALB SecurityGroup"
+        Parameters:
+        - GroupName
+# ------------------------------------------------------------#
+#  InputParameters
+# ------------------------------------------------------------#
+Parameters:
+  ALBName:
+    Type: String
+    Default: "cfn-alb-inamura"
+  Type:
+    Type: String
+    Default: "application"
+  Scheme:
+    Type: String
+    Default: "internet-facing"
+  IpAddressType:
+    Type: String
+    Default: "ipv4"
+  TGName1:
+    Type: String
+    Default: "cfn-tgg1-inamura"
+  TargetType:
+    Type: String
+    Default: "lambda"
+  GroupName:
+    Type: String
+    Default: "cfn-sg-alb-inamura"
+
+# ------------------------------------------------------------#
+#  Resources
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+#  ALB
+# ------------------------------------------------------------#
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Ref ALBName
+      Type: !Ref Type
+      Scheme: !Ref Scheme
+      IpAddressType: !Ref IpAddressType
+      Subnets: 
+        - !ImportValue cfn-inamura-public-subneta
+        - !ImportValue cfn-inamura-public-subnetc
+      SecurityGroups: 
+        - !Ref ALBSecurityGroup
+
+  ListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup1
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+
+  ListenerRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup1
+      Conditions:
+        - Field: path-pattern
+          Values: 
+            - '*'
+      ListenerArn: !Ref ListenerHTTP
+      Priority: 1
+
+  ListenerRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: "fixed-response"
+          FixedResponseConfig:
+            ContentType: 'text/html'
+            MessageBody: |
+              <!DOCTYPE html>
+              <html lang="ja">
+              <head>
+              <meta charset="UTF-8">
+              <title>メンテナンスのお知らせ</title>
+              </head>
+              <body>
+                <h1>ただいまメンテナンス中です</h1>
+              </body>
+              </html>
+            StatusCode: 503
+      Conditions:
+        - Field: path-pattern
+          Values: 
+            - '*'
+      ListenerArn: !Ref ListenerHTTP
+      Priority: 2
+
+  TargetGroup1:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: LambdaInvokePermission
+    Properties:
+      Name: !Ref TGName1
+      TargetType: !Ref TargetType
+      Targets:
+        - Id: !ImportValue cfn-lmd-inamura-arn
+
+# ------------------------------------------------------------#
+#  ALB SG
+# ------------------------------------------------------------#
+  ALBSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+        GroupDescription: "ALB SG"
+        GroupName: !Ref GroupName
+        VpcId: !ImportValue cfn-inamura-vpc
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+
+# ------------------------------------------------------------#
+#  リソースベースポリシー
+# ------------------------------------------------------------#
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !ImportValue cfn-lmd-inamura-arn
+      Action: lambda:InvokeFunction
+      Principal: elasticloadbalancing.amazonaws.com
+
+# ------------------------------------------------------------#
+# Output Parameters
+# ------------------------------------------------------------#    
+Outputs:
+  ALBURL:
+    Description: ALB endpoint URL
+    Value: !Join
+        - ""
+        - - http://
+          - !GetAtt ALB.DNSName
